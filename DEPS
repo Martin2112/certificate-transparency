@@ -37,7 +37,8 @@ deps_overrides = {
 
 make_os = {
 	"freebsd10": "gmake",
-	"darwin": "gnumake"
+	"darwin": "gnumake",
+	"openbsd5": "gmake"
 }
 
 import os
