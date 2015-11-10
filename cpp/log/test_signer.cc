@@ -379,7 +379,7 @@ void TestSigner::CreateUnique(SignedTreeHead* sth) {
   sth->set_timestamp(util::TimeInMilliseconds());
   sth->set_tree_size(rand());
   sth->set_sha256_root_hash(UniqueHash());
-  CHECK_EQ(LogSigner::OK, default_signer_->SignTreeHead(sth));
+  CHECK_EQ(LogSigner::OK, default_signer_->SignTreeHead(sth, ct::V1));
 }
 
 // static

@@ -324,7 +324,7 @@ void TreeSigner<Logged>::TimestampAndSign(uint64_t min_timestamp,
     timestamp = min_timestamp;
   sth->set_timestamp(timestamp);
   sth->set_tree_size(cert_tree_->LeafCount());
-  LogSigner::SignResult ret = signer_->SignTreeHead(sth);
+  LogSigner::SignResult ret = signer_->SignTreeHead(sth, version);
   if (ret != LogSigner::OK)
     // Make this one a hard fail. There is really no excuse for it.
     abort();

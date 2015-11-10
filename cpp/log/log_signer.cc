@@ -124,12 +124,30 @@ LogSigner::SignResult LogSigner::SignV1TreeHead(uint64_t timestamp,
   return OK;
 }
 
-LogSigner::SignResult LogSigner::SignTreeHead(SignedTreeHead* sth) const {
+LogSigner::SignResult LogSigner::SignV2TreeHead(uint64_t timestamp,
+                                                int64_t tree_size,
+                                                const string& root_hash,
+                                                string* result) const {
+  // TODO(mhs): Fill this in. Can't do that until serialization submitted
+  LOG(FATAL) << "V2 not currently supported";
+}
+
+LogSigner::SignResult LogSigner::SignTreeHead(SignedTreeHead* sth,
+                                              ct::Version version) const {
   string serialized_sth;
-  Serializer::SerializeResult res =
-      Serializer::SerializeSTHSignatureInput(*sth, &serialized_sth);
-  if (res != Serializer::OK)
+  Serializer::SerializeResult res = Serializer::UNSUPPORTED_VERSION;
+
+  switch (version) {
+    case ct::V1:
+      res = Serializer::SerializeSTHSignatureInput(*sth, &serialized_sth);
+      break;
+
+    // TODO(mhs): Add V2, can't until proto change submitted
+  }
+
+  if (res != Serializer::OK) {
     return GetSerializeError(res);
+  }
   Sign(serialized_sth, sth->mutable_signature());
   sth->mutable_id()->set_key_id(KeyID());
   return OK;

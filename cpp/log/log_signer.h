@@ -50,7 +50,11 @@ class LogSigner : public cert_trans::Signer {
                             const std::string& root_hash,
                             std::string* result) const;
 
-  SignResult SignTreeHead(ct::SignedTreeHead* sth) const;
+  SignResult SignV2TreeHead(uint64_t timestamp, int64_t tree_size,
+                            const std::string& root_hash,
+                            std::string* result) const;
+
+  SignResult SignTreeHead(ct::SignedTreeHead* sth, ct::Version version) const;
 
  private:
   static SignResult GetSerializeError(Serializer::SerializeResult result);

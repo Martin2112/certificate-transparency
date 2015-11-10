@@ -200,7 +200,7 @@ TEST_F(LogSignerTest, SignAndVerifySTH) {
   sth.clear_signature();
   ASSERT_FALSE(sth.has_signature());
 
-  EXPECT_EQ(LogSigner::OK, signer_->SignTreeHead(&sth));
+  EXPECT_EQ(LogSigner::OK, signer_->SignTreeHead(&sth, ct::V1));
   EXPECT_TRUE(sth.has_signature());
   EXPECT_EQ(default_sth.signature().hash_algorithm(),
             sth.signature().hash_algorithm());
@@ -318,7 +318,7 @@ TEST_F(LogSignerTest, SignAndVerifySTHApiCrossCheck) {
   sth.CopyFrom(default_sth);
   sth.clear_signature();
 
-  EXPECT_EQ(LogSigner::OK, signer_->SignTreeHead(&sth));
+  EXPECT_EQ(LogSigner::OK, signer_->SignTreeHead(&sth, ct::V1));
 
   // Serialize and verify.
   string serialized_sig;
@@ -448,7 +448,8 @@ TEST_F(LogSignerTest, SignBadRootHash) {
   sth.clear_signature();
   sth.set_sha256_root_hash("bad");
 
-  EXPECT_EQ(LogSigner::INVALID_HASH_LENGTH, signer_->SignTreeHead(&sth));
+  EXPECT_EQ(LogSigner::INVALID_HASH_LENGTH,
+            signer_->SignTreeHead(&sth, ct::V1));
 
   string serialized_sig;
   EXPECT_EQ(LogSigner::INVALID_HASH_LENGTH,
