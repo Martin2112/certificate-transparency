@@ -86,10 +86,11 @@ unique_ptr<LogSigner> BuildLogSigner() {
 unique_ptr<TreeSigner<LoggedEntry>> BuildTreeSigner(
     Database* db, ConsistentStore<LoggedEntry>* consistent_store,
     LogSigner* log_signer) {
+  // TODO(mhs): V2 support
   return unique_ptr<TreeSigner<LoggedEntry>>(new TreeSigner<LoggedEntry>(
       std::chrono::duration<double>(0), db,
       unique_ptr<CompactMerkleTree>(new CompactMerkleTree(new Sha256Hasher)),
-      consistent_store, log_signer));
+      consistent_store, log_signer, ct::V1));
 }
 
 

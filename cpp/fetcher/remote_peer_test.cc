@@ -101,7 +101,7 @@ class RemotePeerTest : public ::testing::Test {
         tree_signer_(std::chrono::duration<double>(0), test_db_.db(),
                      unique_ptr<CompactMerkleTree>(
                          new CompactMerkleTree(new Sha256Hasher)),
-                     &store_, log_signer_.get()),
+                     &store_, log_signer_.get(), ct::V1),
         task_(&pool_) {
     FLAGS_remote_peer_sth_refresh_interval_seconds = 1;
     StoreInitialSthMetricValues();

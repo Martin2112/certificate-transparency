@@ -36,7 +36,8 @@ class TreeSigner {
   TreeSigner(const std::chrono::duration<double>& guard_window, Database* db,
              std::unique_ptr<CompactMerkleTree> merkle_tree,
              cert_trans::ConsistentStore<Logged>* consistent_store,
-             LogSigner* signer);
+             LogSigner* signer,
+             ct::Version version);
 
   enum UpdateResult {
     OK,
@@ -65,7 +66,8 @@ class TreeSigner {
  private:
   bool Append(const Logged& logged);
   void AppendToTree(const Logged& logged_cert);
-  void TimestampAndSign(uint64_t min_timestamp, ct::SignedTreeHead* sth);
+  void TimestampAndSign(uint64_t min_timestamp, ct::SignedTreeHead* sth,
+                        ct::Version version);
 
   const std::chrono::duration<double> guard_window_;
   Database* const db_;
@@ -73,6 +75,7 @@ class TreeSigner {
   LogSigner* const signer_;
   const std::unique_ptr<CompactMerkleTree> cert_tree_;
   ct::SignedTreeHead latest_tree_head_;
+  const ct::Version version_;
 
   template <class T>
   friend class TreeSignerTest;

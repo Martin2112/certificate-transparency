@@ -64,7 +64,7 @@ class LogLookupTest : public ::testing::Test {
         tree_signer_(std::chrono::duration<double>(0), db(),
                      unique_ptr<CompactMerkleTree>(
                          new CompactMerkleTree(new Sha256Hasher)),
-                     &store_, log_signer_.get()),
+                     &store_, log_signer_.get(), ct::V1),
         verifier_(TestSigner::DefaultLogSigVerifier(),
                   new MerkleVerifier(new Sha256Hasher())) {
     // Set some noddy STH so that we can call UpdateTree on the Tree Signer.

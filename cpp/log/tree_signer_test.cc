@@ -69,7 +69,7 @@ class TreeSignerTest : public ::testing::Test {
     tree_signer_.reset(new TS(std::chrono::duration<double>(0), db(),
                               unique_ptr<CompactMerkleTree>(
                                   new CompactMerkleTree(new Sha256Hasher)),
-                              store_.get(), log_signer_.get()));
+                              store_.get(), log_signer_.get(), ct::V1));
     // Set a default empty STH so that we can call UpdateTree() on the signer.
     store_->SetServingSTH(SignedTreeHead());
     // Force an empty sequence mapping file:
@@ -114,7 +114,7 @@ class TreeSignerTest : public ::testing::Test {
     return new TS(std::chrono::duration<double>(0), db(),
                   unique_ptr<CompactMerkleTree>(new CompactMerkleTree(
                       *tree_signer_->cert_tree_, new Sha256Hasher)),
-                  store_.get(), log_signer_.get());
+                  store_.get(), log_signer_.get(), ct::V1);
   }
 
   T* db() const {
@@ -149,6 +149,9 @@ TYPED_TEST(TreeSignerTest, PendingEntriesOrder) {
   PendingEntriesOrder<LoggedEntry> ordering;
   LoggedEntry lowest;
   this->test_signer_.CreateUnique(&lowest);
+
+  // Should have created a V1 object
+  EXPECT_EQ(ct::V1, lowest.sct().version());
 
   // Can't be lower than itself!
   EXPECT_FALSE(ordering(H(lowest), H(lowest)));

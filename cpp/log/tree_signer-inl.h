@@ -63,13 +63,15 @@ template <class Logged>
 TreeSigner<Logged>::TreeSigner(
     const std::chrono::duration<double>& guard_window, Database* db,
     std::unique_ptr<CompactMerkleTree> merkle_tree,
-    cert_trans::ConsistentStore<Logged>* consistent_store, LogSigner* signer)
+    cert_trans::ConsistentStore<Logged>* consistent_store, LogSigner* signer,
+    ct::Version version)
     : guard_window_(guard_window),
       db_(db),
       consistent_store_(consistent_store),
       signer_(signer),
       cert_tree_(std::move(merkle_tree)),
-      latest_tree_head_() {
+      latest_tree_head_(),
+      version_(version) {
   CHECK(cert_tree_);
   // Try to get any STH previously published by this node.
   const util::StatusOr<ct::ClusterNodeState> node_state(
@@ -81,6 +83,8 @@ TreeSigner<Logged>::TreeSigner(
   if (node_state.ok()) {
     latest_tree_head_ = node_state.ValueOrDie().newest_sth();
   }
+  // TODO(mhs): Support for V2 required in this class
+  CHECK(version == ct::V1);
 }
 
 
@@ -257,7 +261,7 @@ typename TreeSigner<Logged>::UpdateResult TreeSigner<Logged>::UpdateTree() {
   // a matching sequence number in the database (at least assuming overwriting
   // the sequence number is not allowed).
   ct::SignedTreeHead new_sth;
-  TimestampAndSign(min_timestamp, &new_sth);
+  TimestampAndSign(min_timestamp, &new_sth, version_);
 
   // We don't actually store this STH anywhere durable yet, but rather let the
   // caller decide what to do with it.  (In practice, this will mean that it's
@@ -306,8 +310,12 @@ void TreeSigner<Logged>::AppendToTree(const Logged& logged) {
 
 template <class Logged>
 void TreeSigner<Logged>::TimestampAndSign(uint64_t min_timestamp,
-                                          ct::SignedTreeHead* sth) {
-  sth->set_version(ct::V1);
+                                          ct::SignedTreeHead* sth,
+                                          ct::Version version) {
+  // TODO(mhs): Add V2 support, needs pending serialization changes
+  CHECK(version == ct::V1);
+
+  sth->set_version(version);
   sth->set_sha256_root_hash(cert_tree_->CurrentRoot());
   uint64_t timestamp = util::TimeInMilliseconds();
   if (timestamp < min_timestamp)
