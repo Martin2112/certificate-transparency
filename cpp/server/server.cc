@@ -114,6 +114,8 @@ void Server::StaticInit() {
 }
 
 
+// TODO(mhs): Check that versioned proposal dir is sufficient to prevent
+// problems with mixed version nodes in elections.
 Server::Server(const ct::Version supported_ct_version,
                const shared_ptr<libevent::Base>& event_base,
                ThreadPool* internal_pool, ThreadPool* http_pool, Database* db,
@@ -128,15 +130,17 @@ Server::Server(const ct::Version supported_ct_version,
       node_id_(GetNodeId(db_)),
       url_fetcher_(CHECK_NOTNULL(url_fetcher)),
       etcd_client_(CHECK_NOTNULL(etcd_client)),
-      election_(event_base_, etcd_client_, FLAGS_etcd_root + "/election",
+      election_(event_base_, etcd_client_,
+                FLAGS_etcd_root + "/election_" +
+                    ct::Version_Name(supported_ct_version),
                 node_id_),
       internal_pool_(CHECK_NOTNULL(internal_pool)),
       server_task_(internal_pool_),
       consistent_store_(&election_,
                         new EtcdConsistentStore<LoggedEntry>(
-                            supported_ct_version,
-                            event_base_.get(), internal_pool_, etcd_client_,
-                            &election_, FLAGS_etcd_root, node_id_)),
+                            supported_ct_version, event_base_.get(),
+                            internal_pool_, etcd_client_, &election_,
+                            FLAGS_etcd_root, node_id_)),
       http_pool_(CHECK_NOTNULL(http_pool)) {
   CHECK_LT(0, FLAGS_port);
 
