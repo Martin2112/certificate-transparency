@@ -115,7 +115,9 @@ void Server::StaticInit() {
 
 
 // TODO(mhs): Check that versioned proposal dir is sufficient to prevent
-// problems with mixed version nodes in elections.
+// problems with mixed version nodes in elections. Possibly the code can
+// never get that far if the version is different but it's good to be
+// defensive
 Server::Server(const ct::Version supported_ct_version,
                const shared_ptr<libevent::Base>& event_base,
                ThreadPool* internal_pool, ThreadPool* http_pool, Database* db,
