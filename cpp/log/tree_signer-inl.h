@@ -312,22 +312,23 @@ template <class Logged>
 void TreeSigner<Logged>::TimestampAndSign(uint64_t min_timestamp,
                                           ct::SignedTreeHead* sth,
                                           ct::Version version) {
-  // TODO(mhs): Add V2 support, needs pending serialization changes
-  CHECK(version == ct::V1);
+  CHECK(version == ct::V1 || version == ct::V2);
 
   sth->set_version(version);
   sth->set_sha256_root_hash(cert_tree_->CurrentRoot());
   uint64_t timestamp = util::TimeInMilliseconds();
-  if (timestamp < min_timestamp)
+  if (timestamp < min_timestamp) {
     // TODO(ekasper): shouldn't really happen if everyone's clocks are in sync;
     // log a warning if the skew is over some threshold?
     timestamp = min_timestamp;
+  }
   sth->set_timestamp(timestamp);
   sth->set_tree_size(cert_tree_->LeafCount());
   LogSigner::SignResult ret = signer_->SignTreeHead(sth, version);
-  if (ret != LogSigner::OK)
+  if (ret != LogSigner::OK) {
     // Make this one a hard fail. There is really no excuse for it.
     abort();
+  }
 }
 
 

@@ -17,6 +17,8 @@ using ct::LogEntry;
 using ct::LogEntryType;
 using ct::SignedCertificateTimestamp;
 using ct::SignedTreeHead;
+using ct::SthExtension;
+using google::protobuf::RepeatedPtrField;
 using std::string;
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000
@@ -104,6 +106,7 @@ LogSigner::SignResult LogSigner::SignCertificateTimestamp(
   return OK;
 }
 
+// Only used by tests
 LogSigner::SignResult LogSigner::SignV1TreeHead(uint64_t timestamp,
                                                 int64_t tree_size,
                                                 const string& root_hash,
@@ -124,26 +127,33 @@ LogSigner::SignResult LogSigner::SignV1TreeHead(uint64_t timestamp,
   return OK;
 }
 
-LogSigner::SignResult LogSigner::SignV2TreeHead(uint64_t timestamp,
-                                                int64_t tree_size,
-                                                const string& root_hash,
-                                                string* result) const {
-  // TODO(mhs): Fill this in. Can't do that until serialization submitted
-  LOG(FATAL) << "V2 not currently supported";
+// Only used by tests
+LogSigner::SignResult LogSigner::SignV2TreeHead(
+    uint64_t timestamp, int64_t tree_size, const string& root_hash,
+    const RepeatedPtrField<SthExtension>& sth_extension, const string& log_id,
+    string* result) const {
+  CHECK_GE(tree_size, 0);
+  string serialized_sth;
+  Serializer::SerializeResult res =
+      Serializer::SerializeV2STHSignatureInput(timestamp, tree_size, root_hash,
+                                               sth_extension, log_id,
+                                               &serialized_sth);
+
+  if (res != Serializer::OK)
+    return GetSerializeError(res);
+
+  DigitallySigned signature;
+  Sign(serialized_sth, &signature);
+  CHECK_EQ(Serializer::OK,
+           Serializer::SerializeDigitallySigned(signature, result));
+  return OK;
 }
 
 LogSigner::SignResult LogSigner::SignTreeHead(SignedTreeHead* sth,
                                               ct::Version version) const {
   string serialized_sth;
-  Serializer::SerializeResult res = Serializer::UNSUPPORTED_VERSION;
-
-  switch (version) {
-    case ct::V1:
-      res = Serializer::SerializeSTHSignatureInput(*sth, &serialized_sth);
-      break;
-
-    // TODO(mhs): Add V2, can't until proto change submitted
-  }
+  Serializer::SerializeResult res =
+      Serializer::SerializeSTHSignatureInput(*sth, &serialized_sth);
 
   if (res != Serializer::OK) {
     return GetSerializeError(res);
