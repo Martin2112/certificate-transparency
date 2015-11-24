@@ -270,6 +270,26 @@ void TestSigner::SetPrecertDefaults(SignedCertificateTimestamp* sct) {
   sct->mutable_signature()->set_signature(B(kDefaultPrecertSCTSignature));
 }
 
+void TestSigner::SetPrecertDefaultsV2(LogEntry* entry) {
+  entry->set_type(ct::PRECERT_ENTRY_V2);
+  entry->mutable_precert_entry()->set_pre_certificate(B(kDefaultDerPrecert));
+  entry->mutable_precert_entry()->mutable_cert_info()->set_issuer_key_hash(
+      B(kDefaultKeyHash));
+  entry->mutable_precert_entry()->mutable_cert_info()->set_tbs_certificate(
+      B(kDefaultDerTbsCert));
+}
+
+// static
+void TestSigner::SetPrecertDefaultsV2(SignedCertificateTimestamp* sct) {
+  sct->set_version(ct::V2);
+  sct->mutable_id()->set_key_id(B(kKeyID));
+  sct->set_timestamp(kDefaultSCTTimestamp);
+  sct->clear_extensions();
+  sct->mutable_signature()->set_hash_algorithm(DigitallySigned::SHA256);
+  sct->mutable_signature()->set_sig_algorithm(DigitallySigned::ECDSA);
+  sct->mutable_signature()->set_signature(B(kDefaultPrecertSCTSignature));
+}
+
 // static
 void TestSigner::SetDefaults(LoggedEntry* logged_cert) {
   // Some time in September 2012.

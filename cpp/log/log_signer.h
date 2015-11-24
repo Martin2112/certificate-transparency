@@ -41,6 +41,23 @@ class LogSigner : public cert_trans::Signer {
                                            const std::string& extensions,
                                            std::string* result) const;
 
+  // Again these provide an API agnostic to protocol buffers for V2.
+  // Extensions are supplied as a list of pairs of type, value where
+  // the RFC rules define the range of the type and the length of values.
+  SignResult SignV2CertificateTimestamp(
+      uint64_t timestamp, const std::string& issuer_key_hash,
+      const std::string& leaf_certificate,
+      const std::vector<std::pair<uint32_t, const std::string&>> extensions,
+      std::string* result) const;
+
+  // For V2 we could unify this with the above. Not done this at the moment
+  // as the spec is not yet final
+  SignResult SignV2PrecertificateTimestamp(
+      uint64_t timestamp, const std::string& issuer_key_hash,
+      const std::string& leaf_certificate,
+      const std::vector<std::pair<uint32_t, const std::string&>> extensions,
+      std::string* result) const;
+
   // Sign the cert timestamp and write the resulting DigitallySigned
   // signature message into |sct|.
   SignResult SignCertificateTimestamp(

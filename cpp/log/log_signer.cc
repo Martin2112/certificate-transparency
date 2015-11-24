@@ -18,6 +18,7 @@ using ct::LogEntryType;
 using ct::SignedCertificateTimestamp;
 using ct::SignedTreeHead;
 using ct::SthExtension;
+using ct::SctExtension;
 using google::protobuf::RepeatedPtrField;
 using std::string;
 
@@ -83,6 +84,73 @@ LogSigner::SignResult LogSigner::SignV1PrecertificateTimestamp(
   if (res != Serializer::OK)
     return GetSerializeError(res);
 
+  DigitallySigned signature;
+  Sign(serialized_input, &signature);
+  CHECK_EQ(Serializer::OK,
+           Serializer::SerializeDigitallySigned(signature, result));
+  return OK;
+}
+
+// TODO(mhs): Add tests for this when the rest of the signer fully supports
+// v2.
+LogSigner::SignResult LogSigner::SignV2CertificateTimestamp(
+    uint64_t timestamp, const string& issuer_key_hash,
+    const string& leaf_certificate,
+    const std::vector<std::pair<uint32_t, const string&>> extensions,
+    std::string* result) const {
+  string serialized_input;
+  // Convert the extensions to a proto, type range etc. will be validated
+  // by the serializer
+  SignedCertificateTimestamp sct;
+  for (std::pair<uint32_t, const string&> extension : extensions) {
+    SctExtension* sct_ext = sct.add_sct_extension();
+    sct_ext->set_sct_extension_type(extension.first);
+    sct_ext->set_sct_extension_data(extension.second);
+  }
+
+  Serializer::SerializeResult res =
+      Serializer::SerializeV2CertSCTSignatureInput(timestamp, issuer_key_hash,
+                                                   leaf_certificate,
+                                                   sct.sct_extension(),
+                                                   &serialized_input);
+
+  if (res != Serializer::OK) {
+    return GetSerializeError(res);
+  }
+  DigitallySigned signature;
+  Sign(serialized_input, &signature);
+  CHECK_EQ(Serializer::OK,
+           Serializer::SerializeDigitallySigned(signature, result));
+  return OK;
+}
+
+// TODO(mhs): In V2 cert and precerts are using the same data structure
+// and this could be refactored to combine with the above.
+LogSigner::SignResult LogSigner::SignV2PrecertificateTimestamp(
+    uint64_t timestamp, const string& issuer_key_hash,
+    const string& leaf_certificate,
+    const std::vector<std::pair<uint32_t, const string&>> extensions,
+    std::string* result) const {
+  string serialized_input;
+  // Convert the extensions to a proto, type range etc. will be validated
+  // by the serializer
+  SignedCertificateTimestamp sct;
+  for (std::pair<uint32_t, const string&> extension : extensions) {
+    SctExtension* sct_ext = sct.add_sct_extension();
+    sct_ext->set_sct_extension_type(extension.first);
+    sct_ext->set_sct_extension_data(extension.second);
+  }
+
+  Serializer::SerializeResult res =
+      Serializer::SerializeV2PrecertSCTSignatureInput(timestamp,
+                                                      issuer_key_hash,
+                                                      leaf_certificate,
+                                                      sct.sct_extension(),
+                                                      &serialized_input);
+
+  if (res != Serializer::OK) {
+    return GetSerializeError(res);
+  }
   DigitallySigned signature;
   Sign(serialized_input, &signature);
   CHECK_EQ(Serializer::OK,
